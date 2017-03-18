@@ -17,6 +17,7 @@
 package ipv6addr
 
 import (
+	"bytes"
 	"regexp"
 	"strings"
 )
@@ -79,30 +80,35 @@ func IsIpv6Addr(addr string) bool {
 
 func DecompressIpv6Addr(addr string) string {
 
+	buf := bytes.NewBuffer(make([]byte, 0, 4*8+7))
+
 	v6, v4 := makeIpv6Fragment(addr)
-	builder := constructDecompressed(v6)
+	constructDecompressed(buf, v6)
 
 	if len(v4) > 0 {
-		builder += ":" + v4
+		buf.WriteString(":")
+		buf.WriteString(v4)
 	}
 
-	return builder
+	return buf.String()
 }
 
 func CompressIpv6Addr(addr string) string {
 
+	buf := bytes.NewBuffer(make([]byte, 0, 4*8+7))
+
 	v6, v4 := makeIpv6Fragment(addr)
 	begin, end := computeMaxNullRange(v6)
-	builder := constructCompressed(v6, begin, end)
+	constructCompressed(buf, v6, begin, end)
 
 	if len(v4) > 0 {
-		if !strings.HasSuffix(builder, ":") {
-			builder += ":"
+		if buf.Bytes()[buf.Len()-1] != byte(':') {
+			buf.WriteString(":")
 		}
-		builder += v4
+		buf.WriteString(v4)
 	}
 
-	return builder
+	return buf.String()
 }
 
 func makeIpv6Fragment(addr string) (v6 []string, v4 string) {
@@ -189,65 +195,79 @@ func computeMaxNullRange(field []string) (begin int, end int) {
 	return
 }
 
-func constructDecompressed(field []string) (result string) {
-	result += appendDecompressed(field[0])
+func constructDecompressed(buf *bytes.Buffer, field []string) {
+	appendDecompressed(buf, field[0])
 	for _, f := range field[1:] {
-		result += ":" + appendDecompressed(f)
+		buf.WriteString(":")
+		appendDecompressed(buf, f)
 	}
-	return
 }
 
-func constructCompressed(field []string, begin, end int) (result string) {
+func constructCompressed(buf *bytes.Buffer, field []string, begin, end int) {
 	if begin == -1 || begin == end {
 		// 省略なし
-		result += appendCompressed(field[0])
+		appendCompressed(buf, field[0])
 		for _, f := range field[1:] {
-			result += ":" + appendCompressed(f)
+			buf.WriteString(":")
+			appendCompressed(buf, f)
 		}
 	} else if begin == 0 {
 		if end == len(field)-1 {
 			// 全省略
-			result += "::"
+			buf.WriteString("::")
 		} else {
 			// 前省略
-			result += ":"
+			buf.WriteString(":")
 			for _, f := range field[end+1:] {
-				result += ":" + appendCompressed(f)
+				buf.WriteString(":")
+				appendCompressed(buf, f)
 			}
 		}
 	} else {
 		if end == len(field)-1 {
 			// 後省略
 			for _, f := range field[:begin] {
-				result += appendCompressed(f) + ":"
+				appendCompressed(buf, f)
+				buf.WriteString(":")
 			}
-			result += ":"
+			buf.WriteString(":")
 		} else {
 			// 中省略
 			for _, f := range field[:begin] {
-				result += appendCompressed(f) + ":"
+				appendCompressed(buf, f)
+				buf.WriteString(":")
 			}
 			for _, f := range field[end+1:] {
-				result += ":" + appendCompressed(f)
+				buf.WriteString(":")
+				appendCompressed(buf, f)
 			}
 		}
 	}
-	return
 }
 
-func appendDecompressed(text string) string {
+func appendDecompressed(buf *bytes.Buffer, text string) {
 	if isZero(text) {
-		return "0000"
+		buf.WriteString("0000")
 	} else {
-		return strings.Repeat("0", 4-len(text)) + text
+		for i := 0; i < 4-len(text); i++ {
+			buf.WriteString("0")
+		}
+		buf.WriteString(text)
 	}
 }
 
-func appendCompressed(text string) string {
+func appendCompressed(buf *bytes.Buffer, text string) {
 	if isZero(text) {
-		return "0"
+		buf.WriteString("0")
 	} else {
-		return strings.TrimLeft(text, "0")
+		nzIndex := 0
+		for i, ch := range text {
+			if ch != '0' {
+				nzIndex = i
+				break
+			}
+		}
+		buf.WriteString(text[nzIndex:])
 	}
 }
 
