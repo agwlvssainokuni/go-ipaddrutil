@@ -86,9 +86,35 @@ func TestIsIpv4Addr(t *testing.T) {
 	assertIsIpv4Addr(t, false, "0.0.0.290")
 }
 
+func TestIpv4Bytes(t *testing.T) {
+	assertIpv4Bytes(t, [4]byte{0, 0, 0, 0}, "0.0.0.0")
+	assertIpv4Bytes(t, [4]byte{255, 255, 255, 255}, "255.255.255.255")
+	assertIpv4BytesShouldFail(t, "255")
+	assertIpv4BytesShouldFail(t, "255.255")
+	assertIpv4BytesShouldFail(t, "255.255.255")
+	assertIpv4BytesShouldFail(t, "256.255.255.255")
+	assertIpv4BytesShouldFail(t, "255.256.255.255")
+	assertIpv4BytesShouldFail(t, "255.255.256.255")
+	assertIpv4BytesShouldFail(t, "255.255.255.256")
+}
+
 func assertIsIpv4Addr(t *testing.T, expected bool, addr string) {
 	actual := IsIpv4Addr(addr)
 	if actual != expected {
 		t.Errorf("IsIpv4Addr(%s) must be %v, but %v", addr, expected, actual)
+	}
+}
+
+func assertIpv4Bytes(t *testing.T, expected [4]byte, addr string) {
+	actual, _ := Ipv4Bytes(addr)
+	if actual != expected {
+		t.Errorf("Ipv4Bytes(%s) must be %v, but %v", addr, expected, actual)
+	}
+}
+
+func assertIpv4BytesShouldFail(t *testing.T, addr string) {
+	_, err := Ipv4Bytes(addr)
+	if err == nil {
+		t.Errorf("Ipv4Bytes(%s) should fail", addr)
 	}
 }

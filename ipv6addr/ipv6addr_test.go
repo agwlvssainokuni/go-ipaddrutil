@@ -346,6 +346,29 @@ func TestIsIpv6Addr_後IPv4中省略(t *testing.T) {
 	assertIsIpv6Addr(t, false, "5:5:5:5:5::5:5.5.5.5")
 }
 
+func TestIpv6AddrBytes(t *testing.T) {
+	assertIpv6Bytes(t, [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, "::")
+	assertIpv6Bytes(t, [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}, "::123:4567:89ab:cdef")
+	assertIpv6Bytes(t, [16]byte{0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0, 0, 0, 0, 0, 0, 0, 0}, "fedc:ba98:7654:3210::")
+	assertIpv6Bytes(t, [16]byte{0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}, "fedc:ba98:7654:3210:123:4567:89ab:cdef")
+	assertIpv6Bytes(t, [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255}, "::255.255.255.255")
+	assertIpv6Bytes(t, [16]byte{0, 0, 0, 0, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 255, 255, 255, 255}, "::123:4567:89ab:cdef:255.255.255.255")
+	assertIpv6Bytes(t, [16]byte{0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0, 0, 0, 0, 255, 255, 255, 255}, "fedc:ba98:7654:3210::255.255.255.255")
+	assertIpv6Bytes(t, [16]byte{0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0x01, 0x23, 0x45, 0x67, 255, 255, 255, 255}, "fedc:ba98:7654:3210:123:4567:255.255.255.255")
+	assertIpv6BytesShouldFail(t, "10000:1:2:3:4:5:6:7")
+	assertIpv6BytesShouldFail(t, "1:10000:2:3:4:5:6:7")
+	assertIpv6BytesShouldFail(t, "1:2:10000:3:4:5:6:7")
+	assertIpv6BytesShouldFail(t, "1:2:3:10000:4:5:6:7")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:10000:5:6:7")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:5:10000:6:7")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:10000:7")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:7:10000")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:256.255.255.255")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:255.256.255.255")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:255.255.256.255")
+	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:255.255.255.256")
+}
+
 func TestDecompressIpv6Addr(t *testing.T) {
 	assertDecompressIpv6Addr(t, "2001:0db8:0020:0003:1000:0100:0020:0003", "2001:db8:20:3:1000:100:20:3")
 	assertDecompressIpv6Addr(t, "2001:0db8:0000:0000:1234:0000:0000:9abc", "2001:db8::1234:0:0:9abc")
@@ -536,6 +559,20 @@ func assertIsIpv6Addr(t *testing.T, expected bool, addr string) {
 	actual := IsIpv6Addr(addr)
 	if actual != expected {
 		t.Errorf("IsIpv6Addr(%s) must be %v, but %v", addr, expected, actual)
+	}
+}
+
+func assertIpv6Bytes(t *testing.T, expected [16]byte, addr string) {
+	actual, _ := Ipv6Bytes(addr)
+	if actual != expected {
+		t.Errorf("Ipv6Bytes(%s) must be %v, but %v", addr, expected, actual)
+	}
+}
+
+func assertIpv6BytesShouldFail(t *testing.T, addr string) {
+	_, err := Ipv6Bytes(addr)
+	if err == nil {
+		t.Errorf("Ipv6Bytes(%s) should fail", addr)
 	}
 }
 

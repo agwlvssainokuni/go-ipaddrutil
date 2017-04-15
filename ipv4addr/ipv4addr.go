@@ -17,7 +17,10 @@
 package ipv4addr
 
 import (
+	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 var ipv4pattern = "^(?i)" + //
@@ -32,4 +35,20 @@ func init() {
 
 func IsIpv4Addr(addr string) bool {
 	return ipv4regexp.MatchString(addr)
+}
+
+func Ipv4Bytes(addr string) ([4]byte, error) {
+	result := [4]byte{}
+	parts := strings.Split(addr, ".")
+	if len(parts) != 4 {
+		return result, fmt.Errorf("Length mismatch: %d", len(parts))
+	}
+	for i, p := range parts {
+		if u, err := strconv.ParseUint(p, 10, 8); err != nil {
+			return result, err
+		} else {
+			result[i] = byte(u)
+		}
+	}
+	return result, nil
 }

@@ -19,6 +19,7 @@ package ipv6addr
 import (
 	"bytes"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -76,6 +77,32 @@ func init() {
 
 func IsIpv6Addr(addr string) bool {
 	return ipv6regexp.MatchString(addr)
+}
+
+func Ipv6Bytes(addr string) ([16]byte, error) {
+	result := [16]byte{}
+	v6, v4 := makeIpv6Fragment(addr)
+	for i, p := range v6 {
+		if isZero(p) {
+			result[i*2] = 0
+			result[i*2+1] = 0
+		} else if u, err := strconv.ParseUint(p, 16, 8*2); err != nil {
+			return result, err
+		} else {
+			result[i*2] = byte(u >> 8)
+			result[i*2+1] = byte(u & 0x00ff)
+		}
+	}
+	if v4 != "" {
+		for i, p := range strings.Split(v4, ".") {
+			if u, err := strconv.ParseUint(p, 10, 8); err != nil {
+				return result, err
+			} else {
+				result[len(v6)*2+i] = byte(u)
+			}
+		}
+	}
+	return result, nil
 }
 
 func DecompressIpv6Addr(addr string) string {
