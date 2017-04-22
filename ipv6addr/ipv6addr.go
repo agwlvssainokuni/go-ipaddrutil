@@ -105,6 +105,18 @@ func Ipv6Bytes(addr string) ([16]byte, error) {
 	return result, nil
 }
 
+func Ipv6Mask(length uint) (mask [16]byte) {
+	mlen := length / 8
+	for i := uint(0); i < mlen; i++ {
+		mask[i] = 0xFF
+	}
+	if r := length % 8; r != 0 {
+		b := 1<<8 - 1<<(8-r)
+		mask[mlen] = byte(b)
+	}
+	return
+}
+
 func DecompressIpv6Addr(addr string) string {
 
 	buf := bytes.NewBuffer(make([]byte, 0, 4*8+7))

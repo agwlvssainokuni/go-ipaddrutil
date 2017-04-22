@@ -52,3 +52,15 @@ func Ipv4Bytes(addr string) ([4]byte, error) {
 	}
 	return result, nil
 }
+
+func Ipv4Mask(length uint) (mask [4]byte) {
+	mlen := length / 8
+	for i := uint(0); i < mlen; i++ {
+		mask[i] = 0xFF
+	}
+	if r := length % 8; r != 0 {
+		b := 1<<8 - 1<<(8-r)
+		mask[mlen] = byte(b)
+	}
+	return
+}

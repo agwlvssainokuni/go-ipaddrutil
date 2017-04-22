@@ -98,6 +98,18 @@ func TestIpv4Bytes(t *testing.T) {
 	assertIpv4BytesShouldFail(t, "255.255.255.256")
 }
 
+func TestIpv4Mask(t *testing.T) {
+	assertIpv4Mask(t, [4]byte{0, 0, 0, 0}, 0)
+	assertIpv4Mask(t, [4]byte{128, 0, 0, 0}, 1)
+	assertIpv4Mask(t, [4]byte{255, 0, 0, 0}, 8)
+	assertIpv4Mask(t, [4]byte{255, 128, 0, 0}, 9)
+	assertIpv4Mask(t, [4]byte{255, 255, 0, 0}, 16)
+	assertIpv4Mask(t, [4]byte{255, 255, 128, 0}, 17)
+	assertIpv4Mask(t, [4]byte{255, 255, 255, 0}, 24)
+	assertIpv4Mask(t, [4]byte{255, 255, 255, 128}, 25)
+	assertIpv4Mask(t, [4]byte{255, 255, 255, 255}, 32)
+}
+
 func assertIsIpv4Addr(t *testing.T, expected bool, addr string) {
 	actual := IsIpv4Addr(addr)
 	if actual != expected {
@@ -116,5 +128,12 @@ func assertIpv4BytesShouldFail(t *testing.T, addr string) {
 	_, err := Ipv4Bytes(addr)
 	if err == nil {
 		t.Errorf("Ipv4Bytes(%s) should fail", addr)
+	}
+}
+
+func assertIpv4Mask(t *testing.T, expected [4]byte, length uint) {
+	actual := Ipv4Mask(length)
+	if actual != expected {
+		t.Errorf("Ipv4Mask(%d) must be %v, but %v", length, expected, actual)
 	}
 }
