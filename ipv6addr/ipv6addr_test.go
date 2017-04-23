@@ -346,7 +346,7 @@ func TestIsIpv6Addr_後IPv4中省略(t *testing.T) {
 	assertIsIpv6Addr(t, false, "5:5:5:5:5::5:5.5.5.5")
 }
 
-func TestIpv6AddrBytes(t *testing.T) {
+func TestIpv6Bytes(t *testing.T) {
 	assertIpv6Bytes(t, [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, "::")
 	assertIpv6Bytes(t, [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}, "::123:4567:89ab:cdef")
 	assertIpv6Bytes(t, [16]byte{0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0, 0, 0, 0, 0, 0, 0, 0}, "fedc:ba98:7654:3210::")
@@ -367,6 +367,13 @@ func TestIpv6AddrBytes(t *testing.T) {
 	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:255.256.255.255")
 	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:255.255.256.255")
 	assertIpv6BytesShouldFail(t, "1:2:3:4:5:6:255.255.255.256")
+}
+
+func TestFormatIpv6(t *testing.T) {
+	assertFormatIpv6(t, "0000:0000:0000:0000:0000:0000:0000:0000", [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+	assertFormatIpv6(t, "0000:0000:0000:0000:0123:4567:89ab:cdef", [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef})
+	assertFormatIpv6(t, "fedc:ba98:7654:3210:0000:0000:0000:0000", [16]byte{0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0, 0, 0, 0, 0, 0, 0, 0})
+	assertFormatIpv6(t, "fedc:ba98:7654:3210:0123:4567:89ab:cdef", [16]byte{0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef})
 }
 
 func TestIpv6Mask(t *testing.T) {
@@ -602,6 +609,13 @@ func assertIpv6Bytes(t *testing.T, expected [16]byte, addr string) {
 	actual, _ := Ipv6Bytes(addr)
 	if actual != expected {
 		t.Errorf("Ipv6Bytes(%s) must be %v, but %v", addr, expected, actual)
+	}
+}
+
+func assertFormatIpv6(t *testing.T, expected string, addr [16]byte) {
+	actual := FormatIpv6(addr)
+	if actual != expected {
+		t.Errorf("FormatIpv6(%v) must be %v, but %v", addr, expected, actual)
 	}
 }
 

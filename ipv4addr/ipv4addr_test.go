@@ -98,6 +98,11 @@ func TestIpv4Bytes(t *testing.T) {
 	assertIpv4BytesShouldFail(t, "255.255.255.256")
 }
 
+func TestFormatIpv4(t *testing.T) {
+	assertFormatIpv4(t, "0.0.0.0", [4]byte{0, 0, 0, 0})
+	assertFormatIpv4(t, "255.255.255.255", [4]byte{255, 255, 255, 255})
+}
+
 func TestIpv4Mask(t *testing.T) {
 	assertIpv4Mask(t, [4]byte{0, 0, 0, 0}, 0)
 	assertIpv4Mask(t, [4]byte{128, 0, 0, 0}, 1)
@@ -128,6 +133,13 @@ func assertIpv4BytesShouldFail(t *testing.T, addr string) {
 	_, err := Ipv4Bytes(addr)
 	if err == nil {
 		t.Errorf("Ipv4Bytes(%s) should fail", addr)
+	}
+}
+
+func assertFormatIpv4(t *testing.T, expected string, addr [4]byte) {
+	actual := FormatIpv4(addr)
+	if actual != expected {
+		t.Errorf("FormatIpv4(%v) must be %v, but %v", addr, expected, actual)
 	}
 }
 

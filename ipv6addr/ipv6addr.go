@@ -105,6 +105,21 @@ func Ipv6Bytes(addr string) ([16]byte, error) {
 	return result, nil
 }
 
+func FormatIpv6(addr [16]byte) string {
+	buf := bytes.NewBuffer(make([]byte, 0, 4*8+7))
+	for i := 0; i < 16; i += 2 {
+		if i > 0 {
+			buf.WriteString(":")
+		}
+		s := strconv.FormatUint(uint64(addr[i])<<8+uint64(addr[i+1]), 16)
+		for i := len(s); i < 4; i++ {
+			buf.WriteString("0")
+		}
+		buf.WriteString(s)
+	}
+	return buf.String()
+}
+
 func Ipv6Mask(length uint) (mask [16]byte) {
 	mlen := length / 8
 	for i := uint(0); i < mlen; i++ {

@@ -17,6 +17,7 @@
 package ipv4addr
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -51,6 +52,18 @@ func Ipv4Bytes(addr string) ([4]byte, error) {
 		}
 	}
 	return result, nil
+}
+
+func FormatIpv4(addr [4]byte) string {
+	buf := bytes.NewBuffer(make([]byte, 0, 3*4+3))
+	for i := 0; i < 4; i += 1 {
+		if i > 0 {
+			buf.WriteString(".")
+		}
+		s := strconv.FormatUint(uint64(addr[i]), 10)
+		buf.WriteString(s)
+	}
+	return buf.String()
 }
 
 func Ipv4Mask(length uint) (mask [4]byte) {
